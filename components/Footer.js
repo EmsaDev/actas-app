@@ -1,0 +1,26 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const Footer = () => {
+  return (
+    <View style={styles.footer}>
+      <Text style={styles.footerText}>© emsa <Text style={styles.emoji}>⚡</Text> 2025 - Todos los derechos reservados</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  footer: {
+    padding: 10,
+    backgroundColor: '#f8f8f8',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#666',
+  },
+});
+
+export default Footer;
