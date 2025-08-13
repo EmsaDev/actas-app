@@ -142,7 +142,7 @@ En las mediciones correspondientes a fronteras comerciales representadas por ${f
     `;
   };
 
-  const handleExportTXT = async () => {
+ /* const handleExportTXT = async () => {
     try {
       const textContent = generateFullText();
       const fileUri = FileSystem.documentDirectory + `formulario_${formData.codigoSic}_${Date.now()}.txt`;
@@ -160,7 +160,58 @@ En las mediciones correspondientes a fronteras comerciales representadas por ${f
     } catch (error) {
       Alert.alert('Error', 'No se pudo exportar el archivo: ' + error.message);
     }
-  };
+  };*/
+
+  const handleExportCSV = async () => {
+  try {
+    // Encabezados CSV
+    const headers = [
+      'Campo', 
+      'Valor'
+    ].join(',');
+
+    // Convertir datos a filas CSV
+    const rows = Object.entries(formData).map(([key, value]) => {
+      // Manejar objetos anidados (como firmas)
+      if (typeof value === 'object' && value !== null) {
+        return `${key},"${JSON.stringify(value).replace(/"/g, '""')}"`;
+      }
+      return `${key},"${String(value || '').replace(/"/g, '""')}"`;
+    }).join('\n');
+
+    const csvContent = `${headers}\n${rows}`;
+    //const fileName = `ActaRevision_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+    // Generar nombre del archivo con fecha/hora
+    const now = new Date();
+    const fileName = `ActaRevision_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}-${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.csv`;
+    const fileUri = FileSystem.documentDirectory + fileName;
+      
+    await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+
+    // 4. Opciones avanzadas de compartir
+    const shareOptions = {
+      mimeType: 'text/csv',
+      dialogTitle: 'Exportar Acta como CSV',
+      UTI: 'public.comma-separated-values-text',
+      saveToFiles: true, // Permite guardar con el gestor de archivos
+    };
+
+    // 5. Mostrar diálogo de compartir con más opciones
+    const result = await Sharing.shareAsync(fileUri, shareOptions);
+
+    await Sharing.shareAsync(fileUri, {
+      mimeType: 'text/csv',
+      dialogTitle: 'Exportar como CSV',
+      UTI: 'public.comma-separated-values-text',
+    });
+
+
+  } catch (error) {
+    Alert.alert('Error', 'No se pudo exportar el CSV: ' + error.message);
+  }
+};
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
@@ -169,7 +220,7 @@ En las mediciones correspondientes a fronteras comerciales representadas por ${f
         style={{ flex: 1 }}
       >
           <ScrollView contentContainerStyle={styles.contentContainer}>
-            <Text style={styles.title}>Resumen del Formulario</Text>
+            <Text style={styles.title}>Resumen de la visita</Text>
             
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Datos del Cliente</Text>
@@ -251,10 +302,10 @@ En las mediciones correspondientes a fronteras comerciales representadas por ${f
             </View>
             <View style={styles.buttonGroup}>
             <TouchableOpacity 
-              style={[styles.exportButton, styles.exportButtonTXT]}
-              onPress={handleExportTXT}
+              style={[styles.exportButton, styles.exportButtonCSV]}
+              onPress={handleExportCSV}
             >
-              <Text style={[styles.exportButtonTXTText]}>Exportar a TXT</Text>
+              <Text style={[styles.exportButtonCSVText]}>Exportar a CSV</Text>
             </TouchableOpacity>
 
              <TouchableOpacity 
@@ -288,7 +339,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#2c3e50',
   },
   section: {
     backgroundColor: 'white',
@@ -305,19 +355,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#3498db',
+    color: '#333ff0',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     paddingBottom: 5,
   },
   label: {
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#555',
   },
   text: {
     marginBottom: 8,
     fontSize: 16,
     lineHeight: 22,
+    color: '#777',   
   },
   generatedText: {
     fontStyle: 'italic',
@@ -336,12 +387,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  exportButtonTXT: {
+  exportButtonCSV: {
     backgroundColor: 'white',
     borderWidth: 2,
     borderColor: '#333ff0',
   },
-  exportButtonTXTText: {
+  exportButtonCSVText: {
     color: '#333ff0', // Texto azul
     fontWeight: 'bold',
     fontSize: 16,          // Texto azul
@@ -350,11 +401,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderWidth: 2,
     borderColor: '#e74c3c',
-  },
-  exportButtonText: {
-    color: '#333ff0',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   exportButtonPDFText: {
     color: '#e74c3c',
